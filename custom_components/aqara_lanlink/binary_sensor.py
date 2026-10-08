@@ -131,7 +131,8 @@ class AqaraHubForwardingHealth(BinarySensorEntity):
 
     Recent reports prove forwarding. Silence from event-driven devices does
     not prove a fault: expose unknown until fresh evidence arrives. Tunnel
-    disconnection remains unavailable through the availability property.
+    disconnection is an observed failure and reports off. The diagnostic
+    remains available independently of the monitored connection.
     """
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -143,10 +144,6 @@ class AqaraHubForwardingHealth(BinarySensorEntity):
         self._hub = hub
         self._attr_unique_id = f"{hub.did}_forwarding_health"
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, hub.did)})
-
-    @property
-    def available(self) -> bool:
-        return bool(self._hub.connected)
 
     @property
     def is_on(self) -> bool | None:

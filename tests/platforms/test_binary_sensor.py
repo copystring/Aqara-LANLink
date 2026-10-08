@@ -46,6 +46,12 @@ def test_forwarding_health_is_on_reflects_hub_liveness():
     hub.lanlink_topology_dids = frozenset({"lumi3.cam"})
     hub.connected = False
     assert ent.is_on is False  # tunnel down
+    assert ent.available is True  # the diagnostic must expose its off state
+    assert ent.state == STATE_OFF
+    hub.connected = True
+    hub.has_received_report = False
+    assert ent.is_on is None  # reconnect does not inherit earlier reports
+    assert ent.available is True
 
 
 async def test_async_setup_entry_adds_forwarding_health():

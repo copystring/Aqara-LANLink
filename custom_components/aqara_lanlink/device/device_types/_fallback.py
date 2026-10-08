@@ -11,12 +11,12 @@ composer module lands.
 from __future__ import annotations
 
 from custom_components.aqara_lanlink.device.descriptors import (
-    AnyDescriptor, EventDescriptor,
+    AnyDescriptor,
 )
 from custom_components.aqara_lanlink.device.trait_policy import BUTTON_TRAITS
 from custom_components.aqara_lanlink.device.traits import TraitSpec
 
-from ._base import ComposeContext, _ec
+from ._base import ComposeContext
 from ._build import build_descriptor
 
 
@@ -47,17 +47,9 @@ def _descriptor_for_trait(wp: str, spec: TraitSpec) -> AnyDescriptor | None:
             # Button.ButtonEvent also appears on Switch endpoints. It keeps
             # event semantics there even though the endpoint composer is a
             # switch-specific handler.
-            wire_path = spec.wire_path or spec.id
-            return EventDescriptor(
-                key=f"auto_{wire_path.replace('.', '_')}",
-                name=spec.name,
-                trigger_trait=spec,
-                event_types=(
-                    tuple((spec.enum_values or {}).values()) or ("press",)
-                ),
-                entity_category=_ec(spec),
-                entity_registry_enabled_default=spec.default_enabled,
-            )
+            from .button import button_event_descriptor
+
+            return button_event_descriptor(spec)
     # Press-to-trigger traits (e.g. Identify.IdentifyTime) render as a
     # stateless Button rather than the data_type-dispatched defaults
     # (which would otherwise turn this writable trait into a Switch or

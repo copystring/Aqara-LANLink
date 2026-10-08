@@ -30,6 +30,16 @@ the likely cause, and the steps to resolve it.
 - Noise detection not working on G350
 - ResouceID settings writes not working for FP2
 
+### Button events on switch and camera endpoints
+
+`Button.ButtonEvent` and `Doorbell.ButtonEvent` now use event entities even
+when their endpoint is a Switch or Camera. Existing automations that listen
+to the former button-event sensor must be updated to the new event entity
+and its `event_type` attribute. The entity changes domain from `sensor` to
+`event`; do not assume existing sensor entity IDs or automations migrate
+automatically. Ordinary `Output.OnOff` switches and writable configuration
+traits retain their existing descriptors and control paths.
+
 ---
 
 ## "Cannot connect" error at setup or re-authentication
@@ -76,7 +86,7 @@ the integration.
 when the tunnel reconnects or its device topology grows. Reports are
 event-driven: a doorbell may legitimately be quiet for many minutes. The
 forwarding diagnostic is on after a recent report and unknown after a quiet
-period; a tunnel disconnection remains unavailable. Keepalive replies confirm
+period; a tunnel disconnection reports off. Keepalive replies confirm
 the tunnel connection, not a periodic device-report contract.
 
 **Resolution:**
@@ -98,6 +108,21 @@ and raised a Repair after three subscription retries. This inference is not
 valid for event-driven sources such as the G4 doorbell. Those warnings are
 retired when the integration loads; report silence alone no longer causes
 subscription retries or a recommendation to reboot or reset the hub.
+
+The transport watchdog is still active: if no frames (including keepalive
+replies) arrive for more than three keepalive intervals, the tunnel is closed
+and the coordinator reconnects. Session-up and topology-growth subscription
+re-arming and standalone-device topology recovery are also retained.
+
+The forwarding diagnostic remains available even when the tunnel is down,
+so it can show **off** for that observed failure. **On** means a recent device
+report was observed in this session; **unknown** means the tunnel is connected
+but there is no recent forwarding evidence. This cannot distinguish a quiet
+event source from a hub whose report forwarding is wedged while it still
+answers keepalives. Neither a successful read response nor a cloud subscription
+response proves unsolicited report delivery. Detecting that failure requires
+a known event or a device-specific, verified periodic-report contract; no such
+contract is assumed for a doorbell.
 
 To diagnose a real forwarding problem, generate a physical device event and
 check whether its report arrives. A captured doorbell report proves forwarding
